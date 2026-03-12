@@ -187,7 +187,9 @@ function sendMessage() {
   const screenshot = currentScreenshot;
   removeScreenshot();
 
-  window.glassChat.sendMessage(text, screenshot).catch(() => {
+  // Pass conversation history so Claude has context
+  const historyForContext = [...chatMessages];
+  window.glassChat.sendMessage(text, screenshot, historyForContext).catch(() => {
     // Error handled via onResponseError
   });
 }

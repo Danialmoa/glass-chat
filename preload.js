@@ -1,8 +1,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("glassChat", {
-  sendMessage: (message, imageBase64) =>
-    ipcRenderer.invoke("send-message", message, imageBase64),
+  sendMessage: (message, imageBase64, history) =>
+    ipcRenderer.invoke("send-message", message, imageBase64, history),
   stopResponse: () => ipcRenderer.invoke("stop-response"),
   takeScreenshot: () => ipcRenderer.invoke("take-screenshot"),
   closeWindow: () => ipcRenderer.invoke("close-window"),

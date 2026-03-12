@@ -211,7 +211,7 @@ app.on("window-all-closed", (e) => {
 
 let activeProcess = null;
 
-ipcMain.handle("send-message", async (event, message, imageBase64) => {
+ipcMain.handle("send-message", async (event, message, imageBase64, history) => {
   // Kill any existing process
   if (activeProcess) {
     activeProcess.kill();
@@ -224,15 +224,30 @@ ipcMain.handle("send-message", async (event, message, imageBase64) => {
     // Find claude binary
     const claudePath = findClaude();
 
-    // Build the prompt
-    let prompt = message;
+    // Build the prompt with conversation history
+    let prompt = "";
+
+    // Include previous messages as context
+    if (history && history.length > 0) {
+      prompt += "Here is our conversation so far:\n\n";
+      for (const msg of history) {
+        if (msg.role === "user") {
+          prompt += `User: ${msg.text}\n\n`;
+        } else if (msg.role === "ai") {
+          prompt += `Assistant: ${msg.text}\n\n`;
+        }
+      }
+      prompt += "---\n\nNow respond to the following message, keeping the above conversation in mind:\n\n";
+    }
+
+    prompt += message;
+
     if (imageBase64) {
       // Save screenshot to temp file and reference it
       const tmpPath = path.join(app.getPath("temp"), "glass-chat-screenshot.png");
-      const fs = require("fs");
       const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
       fs.writeFileSync(tmpPath, Buffer.from(base64Data, "base64"));
-      prompt = `[Screenshot attached at ${tmpPath}]\n\n${message}`;
+      prompt += `\n\n[Screenshot attached at ${tmpPath}]`;
     }
 
     const env = { ...process.env };
