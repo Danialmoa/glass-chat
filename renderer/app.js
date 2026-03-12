@@ -63,6 +63,15 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     toggleHelp();
   }
+  // Cmd+Left / Cmd+Right to snap window position
+  if ((e.metaKey || e.ctrlKey) && e.key === "ArrowLeft" && !historyOpen) {
+    e.preventDefault();
+    window.glassChat.snapLeft();
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === "ArrowRight" && !historyOpen) {
+    e.preventDefault();
+    window.glassChat.snapRight();
+  }
   // Arrow keys + Enter + Delete in history panel
   if (historyOpen) {
     const items = historyList.querySelectorAll(".history-item");

@@ -313,6 +313,20 @@ ipcMain.handle("minimize-window", () => {
   mainWindow?.hide();
 });
 
+ipcMain.handle("snap-left", () => {
+  if (!mainWindow) return;
+  const { height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const [w, h] = mainWindow.getSize();
+  mainWindow.setPosition(20, Math.round((screenHeight - h) / 2));
+});
+
+ipcMain.handle("snap-right", () => {
+  if (!mainWindow) return;
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const [w, h] = mainWindow.getSize();
+  mainWindow.setPosition(screenWidth - w - 20, Math.round((screenHeight - h) / 2));
+});
+
 // When user clicks on the panel, give it keyboard focus so they can type
 ipcMain.handle("focus-window", () => {
   if (mainWindow) {

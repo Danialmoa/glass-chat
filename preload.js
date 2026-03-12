@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld("glassChat", {
   closeWindow: () => ipcRenderer.invoke("close-window"),
   minimizeWindow: () => ipcRenderer.invoke("minimize-window"),
   focusWindow: () => ipcRenderer.invoke("focus-window"),
+  snapLeft: () => ipcRenderer.invoke("snap-left"),
+  snapRight: () => ipcRenderer.invoke("snap-right"),
 
   onResponseChunk: (callback) => {
     ipcRenderer.on("response-chunk", (_, chunk) => callback(chunk));
