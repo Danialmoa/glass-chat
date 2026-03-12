@@ -3,7 +3,9 @@ const messageInput = document.getElementById("message-input");
 const btnSend = document.getElementById("btn-send");
 const btnStop = document.getElementById("btn-stop");
 const btnScreenshot = document.getElementById("btn-screenshot");
-const btnNew = document.getElementById("btn-new");
+const btnHelp = document.getElementById("btn-help");
+const helpPanel = document.getElementById("help-panel");
+const btnCloseHelp = document.getElementById("btn-close-help");
 const btnMinimize = document.getElementById("btn-minimize");
 const btnClose = document.getElementById("btn-close");
 const welcome = document.getElementById("welcome");
@@ -57,6 +59,10 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     toggleHistory();
   }
+  if (e.key === "Escape" && helpOpen) {
+    e.preventDefault();
+    toggleHelp();
+  }
   // Arrow keys + Enter + Delete in history panel
   if (historyOpen) {
     const items = historyList.querySelectorAll(".history-item");
@@ -83,7 +89,8 @@ document.addEventListener("keydown", (e) => {
 btnSend.addEventListener("click", sendMessage);
 btnStop.addEventListener("click", stopResponse);
 btnScreenshot.addEventListener("click", takeScreenshot);
-btnNew.addEventListener("click", newChat);
+btnHelp.addEventListener("click", toggleHelp);
+btnCloseHelp.addEventListener("click", toggleHelp);
 btnMinimize.addEventListener("click", () => window.glassChat.minimizeWindow());
 btnClose.addEventListener("click", () => window.glassChat.closeWindow());
 btnRemoveScreenshot.addEventListener("click", removeScreenshot);
@@ -342,6 +349,16 @@ function formatTimeAgo(timestamp) {
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
   return new Date(timestamp).toLocaleDateString();
+}
+
+// ── Help ──
+
+let helpOpen = false;
+
+function toggleHelp() {
+  helpOpen = !helpOpen;
+  helpPanel.style.display = helpOpen ? "flex" : "none";
+  if (!helpOpen) messageInput.focus();
 }
 
 // ── Screenshot ──

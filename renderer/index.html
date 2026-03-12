@@ -13,10 +13,11 @@
       <span class="app-title">Glass Chat</span>
     </div>
     <div class="titlebar-buttons">
-      <button class="btn-icon btn-new" id="btn-new" title="New Chat">
+      <button class="btn-icon btn-help" id="btn-help" title="Shortcuts">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
       </button>
       <button class="btn-icon btn-minimize" id="btn-minimize" title="Hide (Ctrl+Space)">
@@ -69,6 +70,32 @@
       </button>
     </div>
     <div class="history-list" id="history-list"></div>
+  </div>
+
+  <!-- Help panel -->
+  <div class="help-panel" id="help-panel" style="display: none;">
+    <div class="history-header">
+      <span>Keyboard Shortcuts</span>
+      <button class="btn-icon" id="btn-close-help">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="help-list">
+      <div class="help-row"><kbd>⌘ ⌘</kbd><span>Toggle Glass Chat</span></div>
+      <div class="help-row"><kbd>⌘ N</kbd><span>New chat</span></div>
+      <div class="help-row"><kbd>⌘ H</kbd><span>Chat history</span></div>
+      <div class="help-row"><kbd>Enter</kbd><span>Send message</span></div>
+      <div class="help-row"><kbd>Shift Enter</kbd><span>New line</span></div>
+      <div class="help-row"><kbd>Esc</kbd><span>Close panel</span></div>
+      <div class="help-divider"></div>
+      <div class="help-section">In History</div>
+      <div class="help-row"><kbd>↑ ↓</kbd><span>Navigate chats</span></div>
+      <div class="help-row"><kbd>Enter</kbd><span>Open selected</span></div>
+      <div class="help-row"><kbd>Delete</kbd><span>Delete selected</span></div>
+    </div>
   </div>
 
   <!-- Input area -->
