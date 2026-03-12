@@ -1,0 +1,380 @@
+const chatContainer = document.getElementById("chat-container");
+const messageInput = document.getElementById("message-input");
+const btnSend = document.getElementById("btn-send");
+const btnStop = document.getElementById("btn-stop");
+const btnScreenshot = document.getElementById("btn-screenshot");
+const btnNew = document.getElementById("btn-new");
+const btnMinimize = document.getElementById("btn-minimize");
+const btnClose = document.getElementById("btn-close");
+const welcome = document.getElementById("welcome");
+const screenshotPreview = document.getElementById("screenshot-preview");
+const screenshotImg = document.getElementById("screenshot-img");
+const btnRemoveScreenshot = document.getElementById("btn-remove-screenshot");
+const historyPanel = document.getElementById("history-panel");
+const historyList = document.getElementById("history-list");
+const btnCloseHistory = document.getElementById("btn-close-history");
+
+let isStreaming = false;
+let currentResponseEl = null;
+let currentScreenshot = null;
+let firstChunk = false;
+
+// ── Chat state ──
+let currentChatId = generateId();
+let chatMessages = []; // [{role: "user"|"ai", text: "..."}]
+let historyOpen = false;
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ── Auto-resize textarea ──
+messageInput.addEventListener("input", () => {
+  messageInput.style.height = "auto";
+  messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + "px";
+});
+
+// ── Send on Enter (Shift+Enter for newline) ──
+messageInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "n") {
+    e.preventDefault();
+    newChat();
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === "h") {
+    e.preventDefault();
+    toggleHistory();
+  }
+  if (e.key === "Escape" && historyOpen) {
+    e.preventDefault();
+    toggleHistory();
+  }
+});
+
+btnSend.addEventListener("click", sendMessage);
+btnStop.addEventListener("click", stopResponse);
+btnScreenshot.addEventListener("click", takeScreenshot);
+btnNew.addEventListener("click", newChat);
+btnMinimize.addEventListener("click", () => window.glassChat.minimizeWindow());
+btnClose.addEventListener("click", () => window.glassChat.closeWindow());
+btnRemoveScreenshot.addEventListener("click", removeScreenshot);
+btnCloseHistory.addEventListener("click", toggleHistory);
+
+// ── Listen for streaming responses ──
+window.glassChat.onResponseChunk((chunk) => {
+  if (currentResponseEl) {
+    const content = currentResponseEl.querySelector(".content");
+    if (firstChunk) {
+      content.innerHTML = "";
+      content.textContent = "";
+      firstChunk = false;
+    }
+    content.textContent += chunk;
+    scrollToBottom();
+  }
+});
+
+window.glassChat.onResponseDone(() => {
+  // Save AI response to chat messages
+  if (currentResponseEl) {
+    const text = currentResponseEl.querySelector(".content").textContent;
+    chatMessages.push({ role: "ai", text });
+    saveCurrentChat();
+  }
+  finishStreaming();
+});
+
+window.glassChat.onResponseError((error) => {
+  if (currentResponseEl) {
+    const content = currentResponseEl.querySelector(".content");
+    if (!content.textContent) {
+      currentResponseEl.remove();
+    }
+  }
+  addMessage("error", error);
+  finishStreaming();
+});
+
+window.glassChat.onNewChat(() => {
+  newChat();
+});
+
+// ── Functions ──
+
+function sendMessage() {
+  const text = messageInput.value.trim();
+  if (!text && !currentScreenshot) return;
+  if (isStreaming) return;
+
+  // Hide welcome
+  const wel = document.getElementById("welcome");
+  if (wel) wel.style.display = "none";
+
+  // Show screenshot in chat if attached
+  if (currentScreenshot) {
+    addScreenshotMessage(currentScreenshot);
+  }
+
+  // Show user message & save to history
+  if (text) {
+    addMessage("user", text);
+    chatMessages.push({ role: "user", text });
+  }
+
+  // Clear input
+  messageInput.value = "";
+  messageInput.style.height = "auto";
+
+  // Start streaming
+  startStreaming();
+
+  // Create AI response placeholder with typing indicator
+  currentResponseEl = createMessageEl("ai", "");
+  currentResponseEl.querySelector(".content").innerHTML =
+    '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  chatContainer.appendChild(currentResponseEl);
+  scrollToBottom();
+
+  // Mark that next chunk should clear the typing indicator
+  firstChunk = true;
+
+  // Send to Claude
+  const screenshot = currentScreenshot;
+  removeScreenshot();
+
+  window.glassChat.sendMessage(text, screenshot).catch(() => {
+    // Error handled via onResponseError
+  });
+}
+
+function startStreaming() {
+  isStreaming = true;
+  btnSend.style.display = "none";
+  btnStop.style.display = "flex";
+  messageInput.disabled = true;
+}
+
+function finishStreaming() {
+  isStreaming = false;
+  btnSend.style.display = "flex";
+  btnStop.style.display = "none";
+  messageInput.disabled = false;
+  messageInput.focus();
+  currentResponseEl = null;
+}
+
+function stopResponse() {
+  window.glassChat.stopResponse();
+  finishStreaming();
+}
+
+function newChat() {
+  // Save current chat if it has messages
+  if (chatMessages.length > 0) {
+    saveCurrentChat();
+  }
+
+  // Reset state
+  currentChatId = generateId();
+  chatMessages = [];
+
+  chatContainer.innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <p>Ask Claude anything</p>
+      <span class="shortcut-hint">Double ⌘ to toggle</span>
+    </div>
+  `;
+  removeScreenshot();
+
+  if (historyOpen) toggleHistory();
+  messageInput.focus();
+}
+
+function saveCurrentChat() {
+  if (chatMessages.length === 0) return;
+  const firstUserMsg = chatMessages.find((m) => m.role === "user");
+  const title = firstUserMsg
+    ? firstUserMsg.text.slice(0, 60)
+    : "Untitled chat";
+
+  window.glassChat.saveChat({
+    id: currentChatId,
+    title,
+    messages: chatMessages,
+    updatedAt: Date.now(),
+  });
+}
+
+// ── History ──
+
+async function toggleHistory() {
+  historyOpen = !historyOpen;
+  if (historyOpen) {
+    historyPanel.style.display = "flex";
+    await renderHistory();
+  } else {
+    historyPanel.style.display = "none";
+    messageInput.focus();
+  }
+}
+
+async function renderHistory() {
+  const chats = await window.glassChat.loadHistory();
+  historyList.innerHTML = "";
+
+  if (chats.length === 0) {
+    historyList.innerHTML = '<div class="history-empty">No chat history</div>';
+    return;
+  }
+
+  for (const chat of chats) {
+    const item = document.createElement("div");
+    item.className = "history-item";
+
+    const timeAgo = formatTimeAgo(chat.updatedAt);
+
+    item.innerHTML = `
+      <div class="history-item-info">
+        <div class="history-item-title">${escapeHtml(chat.title)}</div>
+        <div class="history-item-meta">${timeAgo} · ${chat.messageCount} messages</div>
+      </div>
+      <button class="btn-delete" title="Delete">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    `;
+
+    // Click to load chat
+    item.querySelector(".history-item-info").addEventListener("click", () => {
+      loadChatFromHistory(chat.id);
+    });
+
+    // Delete button
+    item.querySelector(".btn-delete").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await window.glassChat.deleteChat(chat.id);
+      await renderHistory();
+    });
+
+    historyList.appendChild(item);
+  }
+}
+
+async function loadChatFromHistory(chatId) {
+  const chat = await window.glassChat.loadChat(chatId);
+  if (!chat) return;
+
+  // Save current chat first
+  if (chatMessages.length > 0) {
+    saveCurrentChat();
+  }
+
+  // Load the selected chat
+  currentChatId = chat.id;
+  chatMessages = chat.messages || [];
+
+  // Render messages
+  chatContainer.innerHTML = "";
+  for (const msg of chatMessages) {
+    addMessage(msg.role, msg.text);
+  }
+
+  toggleHistory();
+  scrollToBottom();
+  messageInput.focus();
+}
+
+function formatTimeAgo(timestamp) {
+  if (!timestamp) return "";
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+}
+
+// ── Screenshot ──
+
+async function takeScreenshot() {
+  const dataUrl = await window.glassChat.takeScreenshot();
+  if (dataUrl) {
+    currentScreenshot = dataUrl;
+    screenshotImg.src = dataUrl;
+    screenshotPreview.style.display = "block";
+  }
+}
+
+function removeScreenshot() {
+  currentScreenshot = null;
+  screenshotPreview.style.display = "none";
+  screenshotImg.src = "";
+}
+
+// ── DOM helpers ──
+
+function addMessage(type, text) {
+  const el = createMessageEl(type, text);
+  chatContainer.appendChild(el);
+  scrollToBottom();
+  return el;
+}
+
+function addScreenshotMessage(dataUrl) {
+  const el = document.createElement("div");
+  el.className = "message message-user message-screenshot";
+  el.innerHTML = `<img src="${dataUrl}" />`;
+  chatContainer.appendChild(el);
+  scrollToBottom();
+}
+
+function createMessageEl(type, text) {
+  const el = document.createElement("div");
+  el.className = `message message-${type}`;
+  if (type === "error") {
+    el.classList.add("message-error");
+  }
+  el.innerHTML = `<div class="content">${escapeHtml(text)}</div>`;
+  return el;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function scrollToBottom() {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// When user clicks anywhere on the panel, grab keyboard focus so they can type
+document.addEventListener("mousedown", () => {
+  window.glassChat.focusWindow();
+  setTimeout(() => messageInput.focus(), 50);
+});
+
+// When toggled open via double-Cmd, auto-focus the input
+window.glassChat.onFocusInput(() => {
+  messageInput.focus();
+});
+
+// Focus input on load
+messageInput.focus();
