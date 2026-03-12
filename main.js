@@ -219,7 +219,12 @@ ipcMain.handle("send-message", async (event, message, imageBase64, history) => {
   }
 
   return new Promise((resolve, reject) => {
-    const args = ["-p", "--output-format", "text"];
+    const args = [
+      "-p",
+      "--output-format", "text",
+      "--system-prompt",
+      "You are a helpful assistant in a floating chat overlay called Glass Chat. Answer questions directly and concisely. Do not mention being Claude Code, do not reference the working directory, folder structures, or file systems unless the user specifically asks about them. Focus purely on answering the user's question.",
+    ];
 
     // Find claude binary
     const claudePath = findClaude();
