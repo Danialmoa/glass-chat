@@ -23,6 +23,7 @@ let firstChunk = false;
 let currentChatId = generateId();
 let chatMessages = []; // [{role: "user"|"ai", text: "..."}]
 let historyOpen = false;
+let historySelectedIndex = -1;
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -55,6 +56,27 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && historyOpen) {
     e.preventDefault();
     toggleHistory();
+  }
+  // Arrow keys + Enter + Delete in history panel
+  if (historyOpen) {
+    const items = historyList.querySelectorAll(".history-item");
+    if (items.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      historySelectedIndex = Math.min(historySelectedIndex + 1, items.length - 1);
+      updateHistorySelection(items);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      historySelectedIndex = Math.max(historySelectedIndex - 1, 0);
+      updateHistorySelection(items);
+    } else if (e.key === "Enter" && historySelectedIndex >= 0) {
+      e.preventDefault();
+      items[historySelectedIndex].querySelector(".history-item-info").click();
+    } else if ((e.key === "Backspace" || e.key === "Delete") && historySelectedIndex >= 0) {
+      e.preventDefault();
+      items[historySelectedIndex].querySelector(".btn-delete").click();
+    }
   }
 });
 
@@ -222,11 +244,22 @@ function saveCurrentChat() {
 async function toggleHistory() {
   historyOpen = !historyOpen;
   if (historyOpen) {
+    historySelectedIndex = -1;
     historyPanel.style.display = "flex";
     await renderHistory();
   } else {
     historyPanel.style.display = "none";
     messageInput.focus();
+  }
+}
+
+function updateHistorySelection(items) {
+  items.forEach((item, i) => {
+    item.classList.toggle("history-item-selected", i === historySelectedIndex);
+  });
+  // Scroll selected item into view
+  if (historySelectedIndex >= 0 && items[historySelectedIndex]) {
+    items[historySelectedIndex].scrollIntoView({ block: "nearest" });
   }
 }
 

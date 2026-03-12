@@ -408,24 +408,24 @@ textarea:focus {
 }
 
 .history-item .btn-delete {
-  opacity: 0;
   background: none;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 4px;
+  padding: 5px;
   border-radius: 4px;
   flex-shrink: 0;
   transition: all 0.12s ease;
 }
 
-.history-item:hover .btn-delete {
-  opacity: 1;
-}
-
 .history-item .btn-delete:hover {
   color: #ff6b6b;
   background: rgba(255, 59, 48, 0.15);
+}
+
+.history-item-selected {
+  background: rgba(99, 102, 241, 0.2) !important;
+  outline: 1px solid rgba(99, 102, 241, 0.4);
 }
 
 .history-empty {
