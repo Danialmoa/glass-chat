@@ -266,7 +266,7 @@ body {
 /* ── Input Area ── */
 .input-area {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 6px;
   padding: 10px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);

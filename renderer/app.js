@@ -136,7 +136,10 @@ window.glassChat.onResponseError((error) => {
       currentResponseEl.remove();
     }
   }
-  addMessage("error", error);
+  // Don't show error for manual stops (SIGTERM = code 143)
+  if (!error.includes("code 143") && !error.includes("SIGTERM")) {
+    addMessage("error", error);
+  }
   finishStreaming();
 });
 
@@ -198,19 +201,24 @@ function startStreaming() {
   isStreaming = true;
   btnSend.style.display = "none";
   btnStop.style.display = "flex";
-  messageInput.disabled = true;
 }
 
 function finishStreaming() {
   isStreaming = false;
   btnSend.style.display = "flex";
   btnStop.style.display = "none";
-  messageInput.disabled = false;
   messageInput.focus();
   currentResponseEl = null;
 }
 
 function stopResponse() {
+  // Remove the typing indicator bubble if no real content yet
+  if (currentResponseEl) {
+    const content = currentResponseEl.querySelector(".content");
+    if (!content.textContent.trim()) {
+      currentResponseEl.remove();
+    }
+  }
   window.glassChat.stopResponse();
   finishStreaming();
 }
