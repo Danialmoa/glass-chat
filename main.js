@@ -36,6 +36,7 @@ function createWindow() {
     height: winHeight,
     x: screenWidth - winWidth - 20,
     y: Math.round((screenHeight - winHeight) / 2),
+    icon: path.join(__dirname, "assets", "app-icon.png"),
     frame: false,
     transparent: true,
     vibrancy: "fullscreen-ui",
@@ -99,14 +100,11 @@ function toggleWindow() {
 }
 
 function createTray() {
-  // Create a simple tray icon (a small circle)
-  const icon = nativeImage.createFromDataURL(
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA" +
-      "mElEQVQ4T2NkoBAwUqifYdAb8D8oKOg/AwPDfwYGhv/ILmNkZPzPxMT4n4mJ6T8zM/" +
-      "N/FhaW/6ysrP9ZWVn/s7Gx/Wdnz/nPwXGdgeP/tf8cHEz/OTmZ/3NxMf/n5mb+z8PD" +
-      "/J+Xl/k/Hx/zf35+5v8CAsz/BQWZ/wsJMf0XFmb6LyrK+F9MjPG/uDjDfwkJBjIDAA" +
-      "CbOC0RnImnQgAAAABJRU5ErkJggg=="
+  // Chat bubble with Claude mascot icon
+  const icon = nativeImage.createFromPath(
+    path.join(__dirname, "assets", "tray-icon.png")
   );
+  icon.setTemplateImage(true); // macOS adapts to light/dark menu bar
   tray = new Tray(icon);
   tray.setToolTip("Glass Chat — Ctrl+Space to toggle");
 
@@ -186,6 +184,12 @@ function startUiohook() {
 }
 
 app.whenReady().then(() => {
+  // Set app icon (replaces Electron icon in macOS menu bar)
+  const appIcon = nativeImage.createFromPath(
+    path.join(__dirname, "assets", "app-icon.png")
+  );
+  app.dock.setIcon(appIcon);
+
   // Hide from Dock — app lives only in tray + floating panel
   app.dock.hide();
 
