@@ -319,14 +319,62 @@ ipcMain.handle("stop-response", () => {
 });
 
 ipcMain.handle("take-screenshot", async () => {
-  const sources = await desktopCapturer.getSources({
-    types: ["screen"],
-    thumbnailSize: { width: 1920, height: 1080 },
+  const tmpPath = path.join(app.getPath("temp"), "glass-chat-selection.png");
+
+  // Remove old file if exists
+  if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+
+  // Hide window so it's not in the screenshot
+  if (mainWindow) mainWindow.hide();
+
+  // Wait a moment for window to fully hide
+  await new Promise((r) => setTimeout(r, 300));
+
+  return new Promise((resolve) => {
+    // macOS interactive selection screenshot (like Cmd+Shift+4)
+    const proc = spawn("screencapture", ["-i", tmpPath]);
+
+    let hasError = false;
+    proc.stderr.on("data", () => { hasError = true; });
+
+    proc.on("close", async (code) => {
+      if (code === 0 && fs.existsSync(tmpPath)) {
+        // Selection screenshot worked
+        const data = fs.readFileSync(tmpPath);
+        fs.unlinkSync(tmpPath);
+        showWindow();
+        resolve(`data:image/png;base64,${data.toString("base64")}`);
+      } else if (hasError) {
+        // Permission issue — fall back to desktopCapturer (full screen)
+        showWindow();
+        try {
+          const sources = await desktopCapturer.getSources({
+            types: ["screen"],
+            thumbnailSize: { width: 1920, height: 1080 },
+          });
+          if (sources.length > 0) {
+            resolve(sources[0].thumbnail.toDataURL());
+          } else {
+            resolve(null);
+          }
+        } catch {
+          resolve(null);
+        }
+      } else {
+        // User cancelled (pressed Escape)
+        showWindow();
+        resolve(null);
+      }
+    });
   });
-  if (sources.length > 0) {
-    return sources[0].thumbnail.toDataURL();
+
+  function showWindow() {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send("focus-input");
+    }
   }
-  return null;
 });
 
 ipcMain.handle("close-window", () => {
