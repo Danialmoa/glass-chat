@@ -457,9 +457,12 @@ function scrollToBottom() {
 }
 
 // When user clicks anywhere on the panel, grab keyboard focus so they can type
-document.addEventListener("mousedown", () => {
+// But don't steal focus from messages (allows text selection)
+document.addEventListener("mousedown", (e) => {
   window.glassChat.focusWindow();
-  setTimeout(() => messageInput.focus(), 50);
+  if (!e.target.closest(".message")) {
+    setTimeout(() => messageInput.focus(), 50);
+  }
 });
 
 // When toggled open via double-Cmd, auto-focus the input
