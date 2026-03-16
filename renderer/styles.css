@@ -166,13 +166,23 @@ body {
   background: var(--bg-message-user);
   align-self: flex-end;
   border-bottom-right-radius: 4px;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: text;
 }
 
 .message-ai {
   background: var(--bg-message-ai);
   align-self: flex-start;
   border-bottom-left-radius: 4px;
-  user-select: text;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  cursor: text;
+}
+
+.message-ai * {
+  -webkit-user-select: text !important;
+  user-select: text !important;
 }
 
 .message-ai .content {
