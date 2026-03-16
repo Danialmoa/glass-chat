@@ -48,7 +48,8 @@
           ]
         }
       ],
-      "identity": null,
+      "identity": "-",
+      "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "extendInfo": {
         "LSUIElement": true,
