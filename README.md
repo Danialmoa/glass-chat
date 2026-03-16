@@ -1,31 +1,42 @@
 # Glass Chat
 
-A floating, glass-effect AI chat overlay for macOS powered by [Claude Code](https://claude.ai) CLI.
+A floating, glass-effect AI chat overlay for macOS — like Spotlight, but for Claude. Toggle it with double ⌘, ask anything, close it. No API key needed — powered by [Claude Code](https://claude.ai) CLI.
 
-![macOS](https://img.shields.io/badge/macOS-only-blue)
+![macOS](https://img.shields.io/badge/platform-macOS-blue)
+![Electron](https://img.shields.io/badge/electron-41-blue)
+![License](https://img.shields.io/badge/license-ISC-green)
+
+<!-- Add a screenshot or GIF here for better engagement -->
+<!-- ![Glass Chat Demo](assets/demo.gif) -->
+
+## Why?
+
+Sometimes you just need a quick answer without leaving what you're doing. Glass Chat floats on top of everything as a transparent overlay — toggle it, ask Claude, get an answer with proper markdown formatting, and move on. No app switching, no browser tabs.
 
 ## Features
 
-- **Floating glass panel** — macOS native vibrancy/blur effect
-- **Double ⌘ to toggle** — appears as an overlay without switching apps
-- **Chat with Claude** — uses `claude -p` under the hood, no API key needed
+- **Floating glass panel** — macOS native vibrancy/blur, stays on top of all windows
+- **Double ⌘ to toggle** — appears instantly as an overlay without switching apps
+- **Powered by Claude** — uses `claude -p` under the hood, no API key required
+- **Markdown rendering** — responses with bold, headings, tables, code blocks, and lists
 - **Screenshot selection** — draw a bounding box to capture any area of your screen
 - **Chat history** — saved to disk, browse and restore past conversations
 - **Conversation memory** — Claude remembers previous messages in the chat
-- **Snap positioning** — move the panel to left or right edge
-- **No Dock icon** — lives in the menu bar tray only
+- **Snap positioning** — snap the panel to the left or right edge of your screen
+- **Keyboard-first** — full keyboard navigation for history, shortcuts for everything
+- **Menu bar only** — no Dock icon, lives quietly in your tray
 
 ## Requirements
 
 - macOS (Apple Silicon)
-- [Claude Code CLI](https://claude.ai) installed and authenticated (`claude` command available in terminal)
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated (`claude` command available in terminal)
 - Accessibility permission (for double-Command shortcut)
 
 ## Installation
 
 ### Option 1: DMG (recommended)
 
-1. Download `Glass Chat-1.0.0-arm64.dmg` from Releases
+1. Download `Glass Chat-1.0.0-arm64.dmg` from [Releases](https://github.com/Danialmoa/glass-chat/releases)
 2. Open the DMG and drag **Glass Chat** to Applications
 3. Open Terminal and run:
    ```bash
@@ -38,7 +49,7 @@ A floating, glass-effect AI chat overlay for macOS powered by [Claude Code](http
 ### Option 2: Build from source
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Danialmoa/glass-chat.git
 cd glass-chat
 npm install
 npm run build
@@ -92,5 +103,14 @@ Chat history is stored at `~/.glass-chat/history/` as JSON files.
 ## Tech Stack
 
 - [Electron](https://www.electronjs.org/) — desktop app framework
+- [marked](https://github.com/markedjs/marked) — markdown rendering
 - [uiohook-napi](https://github.com/nicholasalx/uiohook-napi) — global key listener for double-Command detection
-- [Claude Code CLI](https://claude.ai) (`claude -p`) — AI backend
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude -p`) — AI backend
+
+## Contributing
+
+Pull requests welcome. For major changes, please open an issue first.
+
+## License
+
+ISC
