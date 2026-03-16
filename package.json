@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --mac",
+    "build": "electron-builder --mac --arm64",
     "dev": "electron . --dev"
   },
   "keywords": [],
@@ -13,18 +13,50 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "electron": "^41.0.1",
     "uiohook-napi": "^1.5.4"
   },
   "devDependencies": {
+    "electron": "^41.0.1",
     "electron-builder": "^26.8.1"
   },
   "build": {
     "appId": "com.glasschat.app",
     "productName": "Glass Chat",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/uiohook-napi/**",
+      "node_modules/node-gyp-build/**"
+    ],
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dmg"
+      "icon": "assets/app-icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ],
+      "identity": null,
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": {
+        "LSUIElement": true,
+        "NSAccessibilityUsageDescription": "Glass Chat needs accessibility access to detect double-Command key press for toggling the chat window."
+      }
+    },
+    "dmg": {
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
     }
   }
 }

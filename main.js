@@ -262,6 +262,8 @@ ipcMain.handle("send-message", async (event, message, imageBase64, history) => {
     const env = { ...process.env };
     // Remove CLAUDECODE env var so claude doesn't think it's nested
     delete env.CLAUDECODE;
+    // Ensure PATH includes common locations (packaged .app strips PATH)
+    env.PATH = getFullPath();
 
     activeProcess = spawn(claudePath, args, {
       env,
@@ -450,11 +452,24 @@ ipcMain.handle("delete-chat", (event, chatId) => {
   }
 });
 
+function getFullPath() {
+  const extra = [
+    "/usr/local/bin",
+    "/opt/homebrew/bin",
+    "/opt/homebrew/sbin",
+    path.join(process.env.HOME || "", ".claude", "bin"),
+    path.join(process.env.HOME || "", ".npm-global", "bin"),
+    path.join(process.env.HOME || "", ".local", "bin"),
+    path.join(process.env.HOME || "", ".bun", "bin"),
+  ];
+  return extra.join(":") + ":" + (process.env.PATH || "");
+}
+
 function findClaude() {
   const { execSync } = require("child_process");
   try {
     const result = execSync("which claude", {
-      env: { ...process.env, CLAUDECODE: undefined },
+      env: { ...process.env, PATH: getFullPath(), CLAUDECODE: undefined },
     })
       .toString()
       .trim();
@@ -469,10 +484,9 @@ function findClaude() {
     path.join(process.env.HOME || "", ".npm-global", "bin", "claude"),
   ];
 
-  const fs = require("fs");
   for (const p of paths) {
     if (fs.existsSync(p)) return p;
   }
 
-  return "claude"; // fallback, hope it's in PATH
+  return "claude";
 }
