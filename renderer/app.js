@@ -20,6 +20,13 @@ let isStreaming = false;
 let currentResponseEl = null;
 let currentScreenshot = null;
 let firstChunk = false;
+let currentRawText = "";
+
+// ── Configure marked ──
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
 
 // ── Chat state ──
 let currentChatId = generateId();
@@ -111,19 +118,19 @@ window.glassChat.onResponseChunk((chunk) => {
     const content = currentResponseEl.querySelector(".content");
     if (firstChunk) {
       content.innerHTML = "";
-      content.textContent = "";
+      currentRawText = "";
       firstChunk = false;
     }
-    content.textContent += chunk;
+    currentRawText += chunk;
+    content.innerHTML = marked.parse(currentRawText);
     scrollToBottom();
   }
 });
 
 window.glassChat.onResponseDone(() => {
-  // Save AI response to chat messages
+  // Save AI response to chat messages (raw text for history)
   if (currentResponseEl) {
-    const text = currentResponseEl.querySelector(".content").textContent;
-    chatMessages.push({ role: "ai", text });
+    chatMessages.push({ role: "ai", text: currentRawText });
     saveCurrentChat();
   }
   finishStreaming();
@@ -431,7 +438,11 @@ function createMessageEl(type, text) {
   if (type === "error") {
     el.classList.add("message-error");
   }
-  el.innerHTML = `<div class="content">${escapeHtml(text)}</div>`;
+  if (type === "ai" && text) {
+    el.innerHTML = `<div class="content">${marked.parse(text)}</div>`;
+  } else {
+    el.innerHTML = `<div class="content">${escapeHtml(text)}</div>`;
+  }
   return el;
 }
 
